@@ -6,7 +6,7 @@
 *jar
 *~
 .lein*
-/.classpath
+*.classpath
 /.nrepl-port
 /.prepl-port
 /.project
@@ -30,3 +30,4 @@ test_projects/*/target
 pom.xml
 deps.txt
 profiles.clj
+core
