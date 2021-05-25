@@ -1,4 +1,4 @@
-(defproject leiningen-core "2.9.5-SNAPSHOT"
+(defproject leiningen-core "2.9.7-SNAPSHOT"
   :url "https://github.com/technomancy/leiningen"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
@@ -9,7 +9,7 @@
                   :exclusions [org.clojure/clojure]]
                  [org.flatland/classlojure "0.7.1"]
                  [robert/hooke "1.3.0"]
-                 [clj-commons/pomegranate "1.2.0"
+                 [clj-commons/pomegranate "1.2.1"
                   :exclusions [org.slf4j/jcl-over-slf4j]]
                  [com.hypirion/io "0.3.1"]
                  [org.slf4j/slf4j-nop "1.7.25"] ; wagon-http uses slf4j

@@ -1,5 +1,20 @@
 # Leiningen News -- history of user-visible changes
 
+## 2.9.7 / ???
+
+* Fix a bug where verifying deps could loop forever. (James Carnegie)
+* Get better error messages when deploys fail. (Toby Crawley)
+
+## 2.9.6 / 2021-04-15
+
+* Look for templates in a way that reflects new Clojars group rules. (Phil Hagelberg)
+* Update template-generating template to reflect new Clojars rules. (Phil Hagelberg)
+* Don't `:reload` in tests unless connecting to an nrepl. (Ambrose Bonnaire-Sergeant)
+
+## 2.9.5 / 2020-12-07
+
+* Several dependency version bumps. (Bozhidar Batsov, Utkarsh Gupta, Chris Thunes)
+
 ## 2.9.4 / 2020-07-08
 
 * Fix a bug where dependency conflict resolution errors were wrong. (Phil Hagelberg)

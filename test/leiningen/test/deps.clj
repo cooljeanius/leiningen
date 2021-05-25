@@ -6,6 +6,7 @@
                                       delete-file-recursively]])
   (:require [clojure.java.io :as io]
             [leiningen.core.utils :as utils]
+            [leiningen.core.user :as user]
             [leiningen.core.eval :as eval]
             [leiningen.core.classpath :as classpath]
             [cemerick.pomegranate.aether :as aether]
@@ -223,3 +224,24 @@
                            [rome "0.9"] :unsigned
                            [jdom "1.0"] :unsigned}]
       (is (.contains out (pr-str signed dep))))))
+
+(deftest ^:online test-opengpg-org-server
+  ;; https://keys.openpgp.org/about/faq#older-gnupg
+  ;; https://dev.gnupg.org/T4393#133689
+  (testing "Avoid infinite loop when `gpg --receive-keys` is run against openpgp.org keyservers"
+    (let [project (-> sample-project
+                      (update :repositories (fn [repos]
+                                              (remove #(= "other" (first %)) repos)))
+                      (update :dependencies #(conj (take 2 %)
+                                                   '[commons-io  "2.8.0"]))
+                      (assoc :checksum :ignore))
+          _ (deps project)
+          out (with-out-str
+                ;; so that GNUPGHOME can be set to `test/.gnupg`
+                (with-redefs [user/gpg-program (constantly "test/.gnupg/gpg.sh")]
+                  (deps project ":verify")))]
+      (doseq [[dep signed] '{[org.clojure/clojure "1.3.0"] :signed
+                             [commons-io "2.8.0"] :no-key
+                             [rome "0.9"] :unsigned
+                             [jdom "1.0"] :unsigned}]
+        (is (.contains out (pr-str signed dep)))))))

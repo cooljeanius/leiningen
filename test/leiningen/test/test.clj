@@ -3,6 +3,8 @@
   (:require [clojure.test :refer :all]
             [leiningen.test :refer :all]
             [leiningen.test.helper :refer [tmp-dir sample-no-aot-project
+                                           lein-test-exit-code-project
+                                           lein-test-reload-bug-project
                                            sample-reader-cond-project
                                            sample-failing-project
                                            sample-fixture-error-project
@@ -73,6 +75,19 @@
 (deftest test-reader-conditional-tests
   (test sample-reader-cond-project)
   (is (= (ran?) #{:clj-test :cljc-test})))
+
+(deftest test-namespaces-load-in-order
+  ;; Issue #2715
+  (test lein-test-reload-bug-project))
+
+(deftest test-failure-exit-code
+  (is (= 1
+         (try
+           ;; suppress output; there's a lot of bad-looking stuff here
+           (with-out-str (test lein-test-exit-code-project))
+           false
+           (catch clojure.lang.ExceptionInfo e
+             (:exit-code (ex-data e)))))))
 
 (deftest test-invalid-namespace-argument
   (is (.contains

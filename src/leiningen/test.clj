@@ -73,17 +73,23 @@
                            ~selectors))]
       ns#)))
 
-;; TODO: make this an arg to form-for-testing-namespaces in 3.0.
+;; TODO: make this an option to form-for-testing-namespaces in 3.0.
 (def ^:private ^:dynamic *monkeypatch?* true)
 
 (defn form-for-testing-namespaces
   "Return a form that when eval'd in the context of the project will test each
-  namespace and print an overall summary."
-  ([namespaces _ & [selectors]]
+  namespace and print an overall summary.
+
+  Options:
+  - :reloading-require  if true, use :reload option for clojure.core/require calls"
+  ([namespaces opt & [selectors]]
      (let [ns-sym (gensym "namespaces")]
        `(let [~ns-sym ~(form-for-select-namespaces namespaces selectors)]
           (when (seq ~ns-sym)
-            (apply require :reload ~ns-sym))
+            (apply require
+                   ~@(if (:reloading-require opt)
+                       [:reload])
+                   ~ns-sym))
           (let [failures# (atom {})
                 selected-namespaces# ~(form-for-nses-selectors-match selectors ns-sym)
                 _# (when ~*monkeypatch?*
@@ -113,9 +119,7 @@
                           (when-let [first-var# (-> clojure.test/*testing-vars* first meta)]
                             (let [ns-name# (-> first-var# :ns ns-name name)
                                   test-name# (-> first-var# :name name)]
-                              (swap! failures#
-                                     (fn [_#]
-                                       (update-in @failures# [ns-name#] (fnil conj []) test-name#)))
+                              (swap! failures# update-in [ns-name#] (fnil conj []) test-name#)
                               (newline)
                               (println "lein test :only" (str ns-name# "/" test-name#)))))
                         (if (= :begin-test-ns (:type m#))
@@ -130,10 +134,12 @@
             (spit ".lein-failures" (if ~*monkeypatch?*
                                      (pr-str @failures#)
                                      "#<disabled :monkeypatch-clojure-test>"))
-            (let [total# (+ (int (:error summary#)) (int (:fail summary#)))]
+            (let [exit-code# (min 1
+                                  (+ (int (:error summary#))
+                                     (int (:fail summary#))))]
               (if ~*exit-after-tests*
-                (System/exit total#)
-                total#)))))))
+                (System/exit exit-code#)
+                exit-code#)))))))
 
 (defn- split-selectors [args]
   (let [[nses selectors] (split-with (complement keyword?) args)]
@@ -214,7 +220,15 @@ tests are run. Test selector arguments must come after the list of namespaces.
 
 A default :only test-selector is available to run select tests. For example,
 `lein test :only leiningen.test.test/test-default-selector` only runs the
-specified test. A default :all test-selector is available to run all tests."
+specified test. A default :all test-selector is available to run all tests.
+
+If :eval-in :nrepl is specified in the project, test namespaces may reload
+out-of-order. However, all test namespaces will be (re)loaded at least
+once (in *some* order).
+
+This task uses the following exit codes:
+- 0 if all tests pass successfully
+- 1 otherwise"
   [project & tests]
   (binding [main/*exit-process?* (if (= :leiningen (:eval-in project))
                                    false
@@ -226,7 +240,16 @@ specified test. A default :all test-selector is available to run all tests."
     (let [project (project/merge-profiles project [:leiningen/test :test])
           [nses selectors] (read-args tests project)
           _ (eval/prep project)
-          form (form-for-testing-namespaces nses nil (vec selectors))]
+          form (form-for-testing-namespaces
+                 nses
+                 {;; people running `lein test` with :eval-in :nrepl presumably
+                  ;; want the nrepl server to reevaluate code on each run.
+                  ;; while it's known to be buggy to use :reload, let's just
+                  ;; use it for now, because the alternative would be somewhat
+                  ;; underwhelming for users of :eval-in :nrepl (tests would
+                  ;; never reload).
+                  :reloading-require (= :nrepl (:eval-in project))}
+                 (vec selectors))]
       (try (when-let [n (eval/eval-in-project project form
                                               '(require 'clojure.test))]
              (when (and (number? n) (pos? n))

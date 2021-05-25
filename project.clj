@@ -1,13 +1,13 @@
 ;; This is Leiningen's own project configuration. See doc/TUTORIAL.md
 ;; file as well as sample.project.clj for help writing your own.
 
-(defproject leiningen "2.9.5-SNAPSHOT"
+(defproject leiningen "2.9.7-SNAPSHOT"
   :description "Automate Clojure projects without setting your hair on fire."
   :url "https://github.com/technomancy/leiningen"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   ;; If you update these, update resources/leiningen/bootclasspath-deps.clj too
-  :dependencies [[leiningen-core "2.9.5-SNAPSHOT"]
+  :dependencies [[leiningen-core "2.9.5"]
                  ;; needed for pom
                  [org.clojure/data.xml "0.2.0-alpha5"]
                  ;; needed for test
@@ -18,13 +18,15 @@
                  ;; needed for uberjar
                  [commons-lang "2.6"]
                  ;; needed for repl
-                 [nrepl "0.7.0"]
+                 [nrepl "0.8.3"]
                  ;; needed for change
                  [org.clojars.trptcolin/sjacket "0.1.1.1" :exclusions [org.clojure/clojure]]
                  ;; bump versions of various common transitive deps
                  [net.cgrand/parsley "0.9.3" :exclusions [org.clojure/clojure]]
                  [scout "0.1.1"]
-                 [commons-io "2.6"]]
+                 [commons-io "2.8.0"]
+                 [org.apache.httpcomponents/httpclient "4.5.13"]
+                 [org.apache.httpcomponents/httpcore "4.4.13"]]
   :pedantic? :abort
   ;; checkout-deps don't work with :eval-in :leiningen
   :profiles {:dev {:resource-paths ["leiningen-core/dev-resources"]

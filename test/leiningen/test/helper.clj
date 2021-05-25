@@ -84,6 +84,10 @@
 
 (def with-pom-plugins-project (read-test-project "with-pom-plugins"))
 
+(def lein-test-reload-bug-project (read-test-project "lein-test-reload-bug"))
+
+(def lein-test-exit-code-project (read-test-project "lein-test-exit-code"))
+
 (defn abort-msg
   "Catches main/abort thrown by calling f on its args and returns its error
   message."

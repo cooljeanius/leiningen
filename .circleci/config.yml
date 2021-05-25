@@ -3,7 +3,7 @@ version: 2.1
 executors:
   clojure:
     docker:
-      - image: clojure:<< parameters.java_version >>-lein-2.9.1
+      - image: clojure:<< parameters.java_version >>-lein
     parameters:
       java_version:
         description: "Java version"
@@ -23,6 +23,7 @@ jobs:
       - checkout
       - restore_cache:
           key: leiningen-{{ checksum "project.clj" }}
+      - run: apt update -qq && apt install -y gnupg
       - run:
           name: Bootstrap leiningen-core
           working_directory: ~/leiningen/leiningen-core
@@ -52,8 +53,5 @@ workflows:
           name: "openjdk11"
           java_version: "openjdk-11"
       - build:
-          name: "openjdk13"
-          java_version: "openjdk-13"
-      - build:
-          name: "openjdk14"
-          java_version: "openjdk-14"
+          name: "openjdk16"
+          java_version: "openjdk-16"

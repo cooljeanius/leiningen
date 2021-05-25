@@ -434,6 +434,8 @@
   :uberjar-merge-with {#"\.properties$" [slurp str spit]}
   ;; Add arbitrary jar entries. Supports :path, :paths, :bytes, and :fn types.
   :filespecs [{:type :path :path "config/base.clj"}
+              ;; Files within other jars can be added
+              {:type :path :path "some-dependency-1.0.0.jar!/resources/file.txt"}
               ;; Directory paths are included recursively.
               {:type :paths :paths ["config/web" "config/cli"]}
               ;; Programmatically-generated content can use :bytes.
@@ -495,9 +497,17 @@
   ;; Include xml in generated pom.xml file, as parsed by
   ;; clojure.data.xml/sexp-as-element. Resulting pom still needs to
   ;; validate according to the pom XML schema.
-  :pom-addition [:developers [:developer {:id "benbit"}
-                              [:name "Ben Bitdiddle"]
-                              [:url "http://www.example.com/benjamin"]]]
+  :pom-addition ([:developers [:developer
+                               [:id "technomancy"]
+                               [:name "Phil Hagelberg"]
+                               [:url "https://technomancy.us"]
+                               [:roles
+                                [:role "developer"]
+                                [:role "maintainer"]]]]
+                 [:contributors [:contributor
+                                 [:name "Ben Bitdiddle"]
+                                 [:url "http://www.example.com/benjamin"]
+                                 [:properties [:id "benbit"]]]])
 
 ;;; Safety flags
   ;; Indicate whether or not `lein install` should abort when trying to install

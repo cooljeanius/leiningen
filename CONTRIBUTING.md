@@ -4,18 +4,13 @@ Leiningen is the most widely-contributed-to Clojure project. We
 welcome potential contributors and do our best to try to make it easy
 to help out.
 
-Discussion occurs primarily in the
-[#leiningen channel on Freenode](irc://chat.freenode.net#leiningen)
+Discussion occurs primarily in the #leiningen channel on Libera chat.
 
 Please report issues on the
-[GitHub issue tracker](https://github.com/technomancy/leiningen/issues)
-or the mailing list. Sending bug reports to personal email addresses
-is inappropriate. Simpler issues appropriate for first-time
-contributors looking to help out are tagged "newbie".
+[GitHub issue tracker](https://github.com/technomancy/leiningen/issues).
 
 Code submissions should
-be [sent](https://man.sr.ht/git.sr.ht/send-email.md) with `git
-send-email` or as GitHub pull requests. Please use topic branches when
+be sent as GitHub pull requests. Please use topic branches when
 sending pull requests rather than committing directly to master in
 order to minimize unnecessary merge commit clutter. Direct pull
 requests towards the master branch, not the stable branch.

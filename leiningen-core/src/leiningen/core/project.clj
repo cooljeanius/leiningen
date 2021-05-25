@@ -557,7 +557,7 @@
                 :test-selectors {:default (with-meta '(constantly true)
                                             {:displace true})}
                 ;; bump deps in leiningen's own project.clj with these
-                :dependencies '[^:displace [nrepl/nrepl "0.7.0"
+                :dependencies '[^:displace [nrepl/nrepl "0.8.3"
                                             :exclusions [org.clojure/clojure]]
                                 ^:displace [clojure-complete "0.2.5"
                                             :exclusions [org.clojure/clojure]]]
@@ -583,7 +583,7 @@
    :provided {:pom-scope :provided}
    :repl {:repl true}})
 
-(defn- meta-merge
+(defn meta-merge
   "Recursively merge values based on the information in their metadata."
   [left right]
   (cond (different-priority? left right)
