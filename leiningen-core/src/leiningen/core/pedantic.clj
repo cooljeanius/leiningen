@@ -28,6 +28,13 @@
            (org.eclipse.aether.util.graph.transformer TransformationContextKeys
                                                       ConflictIdSorter)))
 
+(defn- warn [& args]
+  ;; TODO: remove me once #1227 is merged
+  (require 'leiningen.core.main)
+  (apply (resolve 'leiningen.core.main/warn) args))
+
+(def ^:private warn-once (memoize warn))
+
 ;; This namespace originated as an independent library which was at
 ;; https://github.com/xeqi/pedantic in order to allow it to evolve
 ;; at its own pace decoupled from Leiningen's release cycle, but now it's
@@ -42,10 +49,16 @@
         (.transformGraph node context))))
 
 (defn- range?
-  "Does the path point to a DependencyNode asking for a version range?"
+  "Does the path point to a DependencyNode asking for a version range
+   which contains several versions?"
   [{:keys [node]}]
   (when-let [vc (.getVersionConstraint node)]
-    (not (nil? (.getRange vc)))))
+    (let [range (.getRange vc)
+          lb    (some-> range .getLowerBound)
+          ub    (some-> range .getUpperBound)]
+      (and (some? range)
+           (some? lb)
+           (not (.equals lb ub))))))
 
 (defn- set-ranges!
   "Set ranges to contain all paths that asks for a version range"
@@ -158,7 +171,11 @@
      session
      (reify DependencyGraphTransformer
        (transformGraph [_ node context]
-         (transform-graph ranges overrides node context transformer)
+         (try
+           (transform-graph ranges overrides node context transformer)
+           (catch java.lang.OutOfMemoryError _
+             (warn "Pathological dependency tree detected.")
+             (warn "Consider setting :pedantic? false in project.clj to bypass.")))
          ;;Return the DependencyNode in order to meet
          ;;transformGraph's contract
          node)))))
@@ -226,13 +243,6 @@
    :ignoreds (map message-for-version ignoreds)
    :ranges (map message-for-range ranges)
    :exclusions (map exclusion-for-override ignoreds)})
-
-(defn- warn [& args]
-  ;; TODO: remove me once #1227 is merged
-  (require 'leiningen.core.main)
-  (apply (resolve 'leiningen.core.main/warn) args))
-
-(def ^:private warn-once (memoize warn))
 
 (defn- pedantic-print-ranges [messages]
   (when-not (empty? messages)

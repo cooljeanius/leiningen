@@ -22,9 +22,9 @@
 /lein-pprint/.prepl-port
 /logs
 /scratch.clj
+/scratch
 /target
 /wiki
-/web
 TAGS
 test_projects/*/target
 pom.xml

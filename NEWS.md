@@ -1,7 +1,23 @@
 # Leiningen News -- history of user-visible changes
 
-## 2.9.7 / ???
+## 2.9.9 / ???
 
+* Prevent `module-info.class` files from being included in uberjars. (Phil Hagelberg)
+* Prevent duplicate warnings in `resource-paths` when creating jars. (Phil Hagelberg)
+* Fix an issue with `check` where AOT would shadow reflection warnings. (Phil Hagelberg)
+* Allow `change` to edit dependency versions. (Eric Schoen)
+* Fix a bug where composite profiles would leak dependencies downstream. (Phil Hagelberg)
+
+## 2.9.8 / 2021-11-11
+
+* Fix a bug where certain deep dependency trees would overflow stack. (Phil Hagelberg)
+* Allow `LEIN_JAR` to be overridden if you install elsewhere. (Ahmed Sajid)
+
+## 2.9.7 / 2021-09-15
+
+* Detect certain pathological dependency trees and warn. (Phil Hagelberg)
+* Bump to Clojure 1.10.3. (Grzegorz Smajdor)
+* Don't warn on version ranges which point to a single version. (Pierre-Yves Ritschard)
 * Fix a bug where verifying deps could loop forever. (James Carnegie)
 * Get better error messages when deploys fail. (Toby Crawley)
 

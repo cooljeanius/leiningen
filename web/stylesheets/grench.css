@@ -43,7 +43,7 @@ pre, tt, kbd, code {
     font-family: 'Inconsolata', 'Consolas', mono;
 }
 
-#sample-project {
+#sample {
     font-size: 16px;
 }
 
@@ -57,6 +57,37 @@ h3 {
 
 #footer p {
     text-align: center;
+}
+
+.etc {
+    font-size: 90%;
+}
+
+pre#sample {
+    padding: 0.5em;
+    color: white;
+    background-color: #3F3F3F;
+    border-style: solid;
+    border-width: 3px;
+    border-color: #ddd;
+    border-radius: 5px;
+}
+
+pre .prompt {
+    font-weight: bold;
+}
+
+pre .stdout {
+    color: #cc9393;
+}
+
+pre .timing {
+    color: #bfebbf;
+}
+
+ul.download {
+    list-style-position: inside;
+    list-style-type: disc;
 }
 
 @font-face {

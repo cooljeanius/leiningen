@@ -1,16 +1,16 @@
 (ns leiningen.test.pom
-  (:use [clojure.test]
-        [clojure.java.io :only [file delete-file]]
-        [leiningen.pom :as lein-pom :only [make-pom pom pom-uri snapshot?]]
-        [leiningen.core.user :as user]
-        [leiningen.test.helper
-         :only [sample-project sample-profile-meta-project
-                managed-deps-project managed-deps-snapshot-project
-                with-pom-plugins-project]
-         :as lthelper])
   (:require [clojure.data.xml :as xml]
             [leiningen.core.project :as project]
-            [leiningen.core.main :as main]))
+            [leiningen.core.main :as main]
+            [clojure.test :refer :all]
+            [clojure.java.io :as io]
+            [leiningen.pom :as lein-pom :refer [make-pom pom pom-uri snapshot?]]
+            [leiningen.core.user :as user]
+            [leiningen.test.helper
+             :refer [sample-project sample-profile-meta-project
+                     managed-deps-project managed-deps-snapshot-project
+                     with-pom-plugins-project leaky-composite-project]
+             :as lthelper]))
 
 (use-fixtures :once (fn [f]
                       (with-redefs [user/profiles (constantly {})]
@@ -19,9 +19,10 @@
 (xml/alias-uri 'pom pom-uri)
 
 (deftest test-pom-file-is-created
-  (let [pom-file (file (:root sample-project) "pom.xml")]
-    (delete-file pom-file true)
-    (pom sample-project)
+  (let [pom-file (io/file (:root sample-project) "pom.xml")]
+    (io/delete-file pom-file true)
+    (binding [main/*info* false]
+      (pom sample-project))
     (is (.exists pom-file))))
 
 (defn parse-xml [s]
@@ -398,7 +399,8 @@
     (let [project (vary-meta sample-project update-in [:without-profiles] assoc
                              :version "1.0"
                              :dependencies [['clojure "1.0.0-SNAPSHOT"]])]
-      (is (thrown? Exception (pom project))))))
+      (is (thrown? Exception (binding [*err* (java.io.StringWriter.)]
+                               (pom project)))))))
 
 (deftest test-classifier-kept
   (let [xml (parse-xml (make-pom lthelper/native-project))]
@@ -427,7 +429,8 @@
       (is (= [["0.4.5"]] versions)))))
 
 (deftest test-leaky-profile
-  (let [p (make-pom sample-profile-meta-project)
+  (let [p (binding [main/*info* false]
+            (make-pom sample-profile-meta-project))
         deps (deep-content (parse-xml p) [::pom/project ::pom/dependencies])
         t-m (filter #(re-find #"tools.macro" (pr-str %)) deps)
         j-c (filter #(re-find #"java.classpath" (pr-str %)) deps)
@@ -527,3 +530,11 @@
                  [::pom/b
                   [::pom/c 2]
                   [::pom/d 3]]]]))))))
+
+(deftest composite-dev-profile-sets-scope
+  (let [xml (binding [main/*info* false]
+              (parse-xml (make-pom leaky-composite-project)))
+        scopes (map #(first-in % [::pom/dependency ::pom/scope])
+                    (deep-content xml [::pom/project
+                                       ::pom/dependencies]))]
+    (is (= [nil "test" "test"] scopes))))

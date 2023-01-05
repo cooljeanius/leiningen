@@ -8,7 +8,8 @@
                                            sample-reader-cond-project
                                            sample-failing-project
                                            sample-fixture-error-project
-                                           with-system-err-str]]
+                                           with-system-err-str
+                                           with-system-out-str]]
             [clojure.java.io :as io]
             [leiningen.core.main :as main]
             [leiningen.core.project :as project]))
@@ -81,13 +82,12 @@
   (test lein-test-reload-bug-project))
 
 (deftest test-failure-exit-code
-  (is (= 1
-         (try
-           ;; suppress output; there's a lot of bad-looking stuff here
-           (with-out-str (test lein-test-exit-code-project))
-           false
-           (catch clojure.lang.ExceptionInfo e
-             (:exit-code (ex-data e)))))))
+  (let [exit (promise)]
+    ;; suppress output; there's a lot of bad-looking stuff here
+    (with-out-str
+      ;; but get the exit code
+      (deliver exit (test lein-test-exit-code-project)))
+    (is (= 1 @exit))))
 
 (deftest test-invalid-namespace-argument
   (is (.contains
@@ -115,5 +115,6 @@
                                         (.getMessage e))))))))
 
 (deftest test-catch-fixture-errors
-  (test sample-fixture-error-project)
+  (with-system-out-str
+    (test sample-fixture-error-project))
   (is (= (ran?) #{:test-a :test-c})))

@@ -241,7 +241,8 @@
    :jar-exclusions [#"^\." (re-pattern (Pattern/quote (str File/separator ".")))]
    :eval-in :default
    :offline? (not (nil? (System/getenv "LEIN_OFFLINE")))
-   :uberjar-exclusions [#"(?i)^META-INF/[^/]*\.(SF|RSA|DSA)$"]
+   :uberjar-exclusions [#"(?i)^META-INF/[^/]*\.(SF|RSA|DSA)$"
+                        #"^module-info.class$"]
    :uberjar-merge-with {"META-INF/plexus/components.xml"
                         'leiningen.uberjar/components-merger,
                         "data_readers.clj"
@@ -557,9 +558,9 @@
                 :test-selectors {:default (with-meta '(constantly true)
                                             {:displace true})}
                 ;; bump deps in leiningen's own project.clj with these
-                :dependencies '[^:displace [nrepl/nrepl "0.8.3"
+                :dependencies '[^:displace [nrepl/nrepl "0.9.0"
                                             :exclusions [org.clojure/clojure]]
-                                ^:displace [clojure-complete "0.2.5"
+                                ^:displace [org.nrepl/incomplete "0.1.0"
                                             :exclusions [org.clojure/clojure]]]
                 :checkout-deps-shares [:source-paths
                                        :test-paths
@@ -611,7 +612,7 @@
         (= (class left) (class right)) right
 
         :else
-        (do (warn left "and" right "have a type mismatch merging profiles.")
+        (do (warn-once left "and" right "have a type mismatch merging profiles.")
             right)))
 
 (defn- apply-profiles [project profiles]
@@ -632,7 +633,7 @@
           (when-not (or result (#{:provided :dev :user :test :base :default
                                   :production :system :repl}
                                 profile))
-            (warn "Warning: profile" profile "not found."))
+            (warn-once "Warning: profile" profile "not found."))
           (when (and (= :provided profile) (composite-profile? result))
             (throw (Exception.
                     "Composite profiles are incompatible with :provided.")))
@@ -902,11 +903,7 @@
     profile))
 
 (defn- apply-profile-meta [default-meta profile]
-  (cond-> profile
-    (or (map? profile)
-        (composite-profile? profile))
-    (vary-meta (fn [m] (merge default-meta m)))
-    (map? profile) set-dependencies-pom-scope))
+  (vary-meta profile (fn [m] (merge default-meta m))))
 
 (defn project-with-profiles
   ([project profiles]
@@ -930,14 +927,19 @@
         include-profiles-meta (->> (expand-profiles-with-meta
                                     project include-profiles)
                                    (utils/last-distinct-by first))
-        include-profiles (map first include-profiles-meta)
+        effective-include-profiles (map first include-profiles-meta)
         exclude-profiles (utils/last-distinct (expand-profiles project exclude-profiles))
         profile-map (apply dissoc (:profiles (meta project)) exclude-profiles)
-        profiles (map (partial lookup-profile profile-map) include-profiles)
-        normalized-profiles (map normalize-values profiles)]
+        profiles (for [profile-name effective-include-profiles]
+                   (let [profile (lookup-profile profile-map profile-name)
+                         metas (into {} include-profiles-meta)
+                         profile-meta (metas profile-name)]
+                     (-> (vary-meta profile merge profile-meta)
+                         set-dependencies-pom-scope
+                         normalize-values)))]
     (-> project
-        (apply-profiles normalized-profiles)
-        (profile-scope-target-path include-profiles)
+        (apply-profiles profiles)
+        (profile-scope-target-path effective-include-profiles)
         (target-path-subdirs :compile-path)
         (target-path-subdirs :native-path)
         (absolutize-paths)
@@ -1123,8 +1125,8 @@ Also initializes the project; see read-raw for a version that skips init."
       (try (read project)
            (catch Exception e
              (throw (Exception. (format "Problem loading %s" project) e)))))
-    (warn "WARN ignoring checkouts directory" (.getParent project-file)
-             "as it does not contain a project.clj file.")))
+    (warn-once "WARNING: ignoring checkouts directory" (.getParent project-file)
+               "as it does not contain a project.clj file.")))
 
 (alter-var-root #'read-dependency-project memoize)
 

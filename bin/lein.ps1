@@ -34,7 +34,7 @@ function Set-ParentLocation([string]$file)
 
 function Initialize-Environment
 {
-    $env:LEIN_VERSION = '2.9.7-SNAPSHOT'
+    $env:LEIN_VERSION = '2.9.9-SNAPSHOT'
     $env:SNAPSHOT = if($env:LEIN_VERSION -like '*-SNAPSHOT'){'YES'}else{'NO'} #TODO: Still needed?
     $env:ORIGINAL_PWD = $PWD -replace '\\$','\\'
     Set-ParentLocation project.clj
@@ -102,7 +102,7 @@ function Install-Self
     $jardir = ([IO.FileInfo]$env:LEIN_JAR).Directory.FullName
     if(!(Test-Path $jardir -PathType Container)) {mkdir $jardir |Out-Null}
     @{ # splatting Invoke-WebRequest due to long URI
-        Uri = "https://github.com/technomancy/leiningen/releases/download/$env:LEIN_VERSION/leiningen-$env:LEIN_VERSION-standalone.zip"
+        Uri = "https://github.com/technomancy/leiningen/releases/download/$env:LEIN_VERSION/leiningen-$env:LEIN_VERSION-standalone.jar"
         OutFile = $env:LEIN_JAR
     } |% {Write-Progress 'Install-Self' $_.Uri -CurrentOperation "Downloading to $env:LEIN_JAR" ; [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; Invoke-WebRequest @_}
     Write-Progress 'Install-Self' -Completed

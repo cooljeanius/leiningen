@@ -146,7 +146,7 @@ Note that we use `my-stuff.core` instead of just `my-stuff` since
 [single-segment namespaces are discouraged in Clojure](https://stackoverflow.com/questions/13567078/whats-wrong-with-single-segment-namespaces) as using those would imply classes are being assigned
 to the default (no-name) package.
 
-Also note that if a Clojure namespaces segment contains a a dash (`-`), the
+Also note that if a Clojure namespaces segment contains a dash (`-`), the
 corresponding path/filename will contain an underscore (`_`) instead. This is due to the fact that
 [Java disallows dashes in identifiers](https://docs.oracle.com/javase/specs/jls/se12/html/jls-3.html#jls-3.8),
 in particular in package and class names. A Clojure "dash-adorned" namespace identifier is thus mapped
@@ -315,11 +315,13 @@ The names of the symlinks don't matter: Leiningen just follows all of them to fi
     │   └── suchwow -> [link to /code/oss/suchwow]
     .
 
-Libraries located under the `checkouts` directory take precedence
-over libraries pulled from repositories, but this is not a replacement
-for listing the project in your main project's `:dependencies`; it
-simply supplements that for convenience. That is, given the above directory hierarchy,
-`project.clj` should contain something like:
+Libraries located under the `checkouts` directory take precedence over
+libraries pulled from repositories, but this is not a replacement for listing
+the project in your main project's `:dependencies`; it simply supplements
+that for convenience. The project in `:dependencies` must be able to be
+resolved, either from a remote repo or via `lein install` locally. That is,
+given the above directory hierarchy, `project.clj` should contain something
+like:
 
       :dependencies [[org.clojure/clojure "1.9.0"]
                      ...
@@ -403,7 +405,7 @@ Enough setup; let's see some code running. Start with a REPL
     $ cd my-stuff
     $ lein repl
     nREPL server started on port 55568 on host 127.0.0.1 - nrepl://127.0.0.1:55568
-    REPL-y 0.4.4, nREPL 0.8.3
+    REPL-y 0.5.1, nREPL 0.8.3
     Clojure 1.10.1
     OpenJDK 64-Bit Server VM 1.8.0_222-b10
         Docs: (doc function-name-here)

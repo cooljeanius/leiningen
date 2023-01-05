@@ -182,7 +182,7 @@
 
 (defn- init-requires [{{:keys [nrepl-middleware nrepl-handler caught]}
                        :repl-options :as project} & nses]
-  (let [defaults '[nrepl.server complete.core]
+  (let [defaults '[nrepl.server incomplete.core]
         nrepl-syms (->> (cons nrepl-handler nrepl-middleware)
                         (filter symbol?)
                         (map namespace)
@@ -252,8 +252,8 @@
 
 (def reply-profile
   {:dependencies
-   '[^:displace [reply "0.4.4" :exclusions [org.clojure/clojure ring/ring-core]]
-     [clojure-complete "0.2.5"]]})
+   '[^:displace [reply "0.5.1" :exclusions [org.clojure/clojure ring/ring-core]]
+     [org.nrepl/incomplete "0.1.0"]]})
 
 (defn- trampoline-repl [project port]
   (let [init-option (get-in project [:repl-options :init])
@@ -295,7 +295,7 @@
     (-> (bound-fn []
           (binding [eval/*pump-in* false]
             (let [[evals requires]
-                  (server-forms project cfg ack-port headless?)]
+                  (server-forms project cfg ack-port (and headless? main/*info*))]
               (try
                 (eval/eval-in-project project
                                       `(do ~(ignore-sigint-form) ~evals)

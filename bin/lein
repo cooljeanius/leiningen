@@ -8,9 +8,9 @@ function msg {
     echo "$@" 1>&2
 }
 
-export LEIN_VERSION="2.9.7-SNAPSHOT"
+export LEIN_VERSION="2.9.9-SNAPSHOT"
 # Must be sha256sum, will be replaced by bin/release
-export LEIN_CHECKSUM='41c543f73eec4327dc20e60d5d820fc2a9dc772bc671610b9c385d9c4f5970b8'
+export LEIN_CHECKSUM='2a0e9114e0d623c748a9ade5d72b54128b31b5ddb13f51b04c533f104bb0c48d'
 
 case $LEIN_VERSION in
     *SNAPSHOT) SNAPSHOT="YES" ;;
@@ -98,7 +98,7 @@ function self_install {
   fi
   msg "Downloading Leiningen to $LEIN_JAR now..."
   mkdir -p "$(dirname "$LEIN_JAR")"
-  LEIN_URL="https://github.com/technomancy/leiningen/releases/download/$LEIN_VERSION/leiningen-$LEIN_VERSION-standalone.zip"
+  LEIN_URL="https://github.com/technomancy/leiningen/releases/download/$LEIN_VERSION/leiningen-$LEIN_VERSION-standalone.jar"
   $HTTP_CLIENT "$LEIN_JAR.pending" "$LEIN_URL"
   local exit_code=$?
   if [ $exit_code == 0 ]; then
@@ -142,7 +142,7 @@ if $cygwin; then
     export LEIN_HOME=$(cygpath -w "$LEIN_HOME")
 fi
 
-LEIN_JAR="$LEIN_HOME/self-installs/leiningen-$LEIN_VERSION-standalone.jar"
+LEIN_JAR="${LEIN_JAR:-${LEIN_HOME}/self-installs/leiningen-${LEIN_VERSION}-standalone.jar}"
 
 # normalize $0 on certain BSDs
 if [ "$(dirname "$0")" = "." ]; then
@@ -321,7 +321,11 @@ elif [ "$1" = "upgrade" ] || [ "$1" = "downgrade" ]; then
             y|Y|"")
                 echo
                 msg "Upgrading..."
-                TARGET="/tmp/lein-${$}-upgrade"
+                if hash mktemp 2>/dev/null; then
+                    TARGET="(mktemp -t lein-upgrade.XXXXXXXXX)"
+                else
+                    TARGET="/tmp/lein-${$}-upgrade"
+                fi
                 if $cygwin; then
                     TARGET=$(cygpath -w "$TARGET")
                 fi
@@ -371,7 +375,7 @@ else
     else
         if hash mktemp 2>/dev/null; then
             # Check if mktemp is available before using it
-            TRAMPOLINE_FILE="$(mktemp /tmp/lein-trampoline-XXXXXXXXXXXXX)"
+            TRAMPOLINE_FILE="$(mktemp -t lein-trampoline-XXXXXXXXXXXXX)"
         else
             TRAMPOLINE_FILE="/tmp/lein-trampoline-$$"
         fi

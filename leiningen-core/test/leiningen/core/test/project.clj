@@ -1,8 +1,8 @@
 (ns leiningen.core.test.project
   (:refer-clojure :exclude [read])
-  (:use [clojure.test]
-        [leiningen.core.project :as project])
-  (:require [leiningen.core.user :as user]
+  (:require [clojure.test :refer :all]
+            [leiningen.core.project :refer :all :as project]
+            [leiningen.core.user :as user]
             [leiningen.core.test.helper :refer [abort-msg]]
             [leiningen.test.helper :as lthelper]
             [leiningen.core.utils :as utils]
@@ -44,9 +44,9 @@
                                [stencil/stencil "0.2.0"]
                                [~(symbol "net.3scale" "3scale-api") "3.0.2"]
                                [clj-http/clj-http "3.4.1"]
-                               [nrepl/nrepl "0.8.3"
+                               [nrepl/nrepl "0.9.0"
                                 :exclusions [[org.clojure/clojure]]]
-                               [clojure-complete/clojure-complete "0.2.5"
+                               [org.nrepl/incomplete "0.1.0"
                                 :exclusions [[org.clojure/clojure]]]],
                :twelve 12 ; testing unquote
 
@@ -55,7 +55,8 @@
                               ["clojars" {:url "https://repo.clojars.org/"}]]})
 
 (deftest test-read-project
-  (let [actual (read (.getFile (io/resource "p1.clj")))]
+  (let [actual (binding [*err* (java.io.StringWriter.)]
+                 (read (.getFile (io/resource "p1.clj"))))]
     (doseq [[k v] expected]
       (is (= v (k actual))))
     (doseq [[k path] paths
@@ -431,7 +432,8 @@
   (is (= 7 (:seven (init-project (read (.getFile (io/resource "p5.clj"))))))))
 
 (deftest test-checkouts
-  (let [project (read (.getFile (io/resource "p1.clj")))]
+  (let [project (binding [*err* (java.io.StringWriter.)]
+                  (read (.getFile (io/resource "p1.clj"))))]
     (is (= #{"checkout-lib1" "checkout-lib2"} (set (map :name (read-checkouts project)))))))
 
 (deftest test-activate-middleware
@@ -637,3 +639,29 @@
       [:e :b :c :d] "target/e+bcd"
       [:c :a :b :d] "target/c+ab+d"
       [:a]          "target/a")))
+
+(deftest test-init-profiles
+  (let [profiles {:ring {:dependencies [['ring "1.8.2"]]}
+                  :dev  [:ring]
+                  :test {:dependencies [['clucy "1.0.0"]]}}
+        project (init-project {:dependencies '[[org.clojure/clojure "1.10.1"]]
+                               :profiles profiles}
+                              [:default])
+        result (init-profiles project [:dev :test])]
+    (is (= '[[org.clojure/clojure "1.10.1"]
+             [ring "1.8.2" :scope "test"]
+             [clucy "1.0.0" :scope "test"]]
+           (:dependencies result)))))
+
+(deftest test-unmerge-composite-profiles
+  (let [profiles {:ring {:dependencies [['ring "1.8.2"]]}
+                  :dev  [:ring]
+                  :test {:dependencies [['clucy "1.0.0"]]}}
+        project (init-project {:dependencies '[[org.clojure/clojure "1.10.1"]]
+                               :profiles profiles}
+                              [:default])
+        result (unmerge-profiles project [:system :base :provided :user])]
+    (is (= '[[org.clojure/clojure "1.10.1"]
+             [ring "1.8.2" :scope "test"]]
+           (:dependencies result)))))
+

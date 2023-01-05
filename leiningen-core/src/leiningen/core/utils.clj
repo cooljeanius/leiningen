@@ -67,8 +67,9 @@
 (defn mkdirs
   "Make a given directory and its parents, but throw an Exception on failure."
   [f] ; whyyyyy does .mkdirs fail silently ugh
-  (when-not (or (.mkdirs (io/file f)) (.exists (io/file f)))
-    (throw (Exception. (str "Couldn't create directories: " (io/file f))))))
+  (when f ; (io/file nil) returns nil, so we mimic a similar API instead of failing eagerly on nil inputs.
+    (when-not (or (.mkdirs (io/file f)) (.exists (io/file f)))
+      (throw (Exception. (str "Couldn't create directories: " (io/file f)))))))
 
 (defn relativize
   "Makes the filepath path relative to base. Assumes base is an ancestor to
@@ -126,7 +127,7 @@
   {"Mac OS X" :macosx "Windows" :windows "Linux" :linux
    "FreeBSD" :freebsd "OpenBSD" :openbsd
    "amd64" :x86_64 "x86_64" :x86_64 "x86" :x86 "i386" :x86
-   "arm" :arm "SunOS" :solaris "sparc" :sparc "Darwin" :macosx})
+   "arm" :arm "SunOS" :solaris "sparc" :sparc "Darwin" :macosx "aarch64" :aarch_64})
 
 (defn get-os
   "Returns a keyword naming the host OS."
